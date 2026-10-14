@@ -1,0 +1,362 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  email        String     @unique
+  passwordHash String?
+  name         String
+  role         Role       @default(STUDENT)
+  status       UserStatus @default(ACTIVE)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  profile         StudentProfile?
+  problemsCreated Problem[]
+  interviews      Interview[]
+  aiCalls         AiCall[]
+  submissions     Submission[]
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ProblemStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum Language {
+  C
+  CPP
+  JAVA
+  PYTHON
+  JAVASCRIPT
+}
+
+model StudentProfile {
+  userId            String    @id @db.Uuid
+  targetRole        String?
+  experienceLevel   String?
+  preferredLanguage Language?
+  goals             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Topic {
+  id   String @id @default(uuid()) @db.Uuid
+  name String @unique
+  slug String @unique
+
+  problems ProblemTopic[]
+}
+
+model Problem {
+  id            String        @id @default(uuid()) @db.Uuid
+  slug          String        @unique
+  title         String
+  description   String
+  inputFormat   String        @default("")
+  outputFormat  String        @default("")
+  constraints   String        @default("")
+  difficulty    Difficulty
+  timeLimitMs   Int           @default(2000)
+  memoryLimitKb Int           @default(256000)
+  status        ProblemStatus @default(DRAFT)
+  version       Int           @default(1)
+  createdById   String?       @db.Uuid
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  createdBy   User?                @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  topics      ProblemTopic[]
+  starterCode ProblemStarterCode[]
+  testCases   TestCase[]
+  submissions Submission[]
+
+  @@index([status, difficulty])
+}
+
+model ProblemTopic {
+  problemId String @db.Uuid
+  topicId   String @db.Uuid
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  topic   Topic   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([problemId, topicId])
+  @@index([topicId])
+}
+
+model ProblemStarterCode {
+  id        String   @id @default(uuid()) @db.Uuid
+  problemId String   @db.Uuid
+  language  Language
+  code      String
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([problemId, language])
+}
+
+model TestCase {
+  id             String  @id @default(uuid()) @db.Uuid
+  problemId      String  @db.Uuid
+  input          String
+  expectedOutput String
+  isSample       Boolean @default(false)
+  weight         Int     @default(1)
+  orderIndex     Int
+  explanation    String?
+
+  problem Problem            @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  results SubmissionResult[]
+
+  @@index([problemId, orderIndex])
+}
+
+model LanguageConfig {
+  language         Language @id
+  judge0LanguageId Int
+  displayName      String
+  monacoId         String
+  enabled          Boolean  @default(true)
+}
+
+enum InterviewType {
+  TOPIC
+  RESUME
+  MIXED
+}
+
+enum InterviewStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+  EXPIRED
+}
+
+enum QuestionKind {
+  CONCEPTUAL
+  CODING
+  BEHAVIORAL
+  FOLLOW_UP
+}
+
+enum AiFeature {
+  INTERVIEW_PLAN
+  QUESTION
+  FOLLOW_UP
+  EVALUATION
+  REPORT
+  CODE_REVIEW
+  RESUME_PARSE
+  RECOMMENDATION
+}
+
+enum AiCallStatus {
+  SUCCESS
+  INVALID_OUTPUT
+  TIMEOUT
+  ERROR
+}
+
+model Interview {
+  id                   String          @id @default(uuid()) @db.Uuid
+  userId               String          @db.Uuid
+  type                 InterviewType   @default(TOPIC)
+  topic                String
+  difficulty           Difficulty
+  status               InterviewStatus @default(IN_PROGRESS)
+  plan                 Json
+  plannedQuestionCount Int
+  durationMinutes      Int
+  startedAt            DateTime        @default(now())
+  endedAt              DateTime?
+  overallScore         Float?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions InterviewQuestion[]
+  report    InterviewReport?
+
+  @@index([userId, createdAt])
+  @@index([userId, status])
+}
+
+model InterviewQuestion {
+  id               String       @id @default(uuid()) @db.Uuid
+  interviewId      String       @db.Uuid
+  orderIndex       Int
+  slotIndex        Int
+  kind             QuestionKind
+  parentQuestionId String?      @db.Uuid
+  text             String
+  askedAt          DateTime     @default(now())
+
+  interview Interview           @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  parent    InterviewQuestion?  @relation("FollowUps", fields: [parentQuestionId], references: [id], onDelete: SetNull)
+  followUps InterviewQuestion[] @relation("FollowUps")
+  answer    InterviewAnswer?
+
+  @@unique([interviewId, orderIndex])
+}
+
+model InterviewAnswer {
+  id           String   @id @default(uuid()) @db.Uuid
+  questionId   String   @unique @db.Uuid
+  text         String
+  timeTakenSec Int?
+  answeredAt   DateTime @default(now())
+
+  question   InterviewQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  evaluation AnswerEvaluation?
+}
+
+model AnswerEvaluation {
+  id            String   @id @default(uuid()) @db.Uuid
+  answerId      String   @unique @db.Uuid
+  correctness   Int
+  depth         Int
+  clarity       Int
+  score         Float
+  strengths     Json
+  weaknesses    Json
+  feedback      String
+  rubricVersion String
+  createdAt     DateTime @default(now())
+
+  answer InterviewAnswer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+}
+
+model InterviewReport {
+  id               String   @id @default(uuid()) @db.Uuid
+  interviewId      String   @unique @db.Uuid
+  overallScore     Float
+  correctnessScore Float
+  depthScore       Float
+  clarityScore     Float
+  band             String
+  summary          String
+  strengths        Json
+  weaknesses       Json
+  recommendations  Json
+  aiNarrative      Boolean  @default(true)
+  rubricVersion    String
+  generatedAt      DateTime @default(now())
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+}
+
+model AiCall {
+  id            String       @id @default(uuid()) @db.Uuid
+  userId        String?      @db.Uuid
+  feature       AiFeature
+  model         String
+  promptVersion String
+  inputTokens   Int          @default(0)
+  outputTokens  Int          @default(0)
+  latencyMs     Int
+  status        AiCallStatus
+  errorCode     String?
+  createdAt     DateTime     @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([feature, createdAt])
+}
+
+enum SubmissionMode {
+  RUN
+  SUBMIT
+}
+
+enum SubmissionStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum Verdict {
+  ACCEPTED
+  WRONG_ANSWER
+  TIME_LIMIT
+  MEMORY_LIMIT
+  RUNTIME_ERROR
+  COMPILE_ERROR
+  INTERNAL_ERROR
+}
+
+model Submission {
+  id            String           @id @default(uuid()) @db.Uuid
+  userId        String           @db.Uuid
+  problemId     String           @db.Uuid
+  language      Language
+  sourceCode    String
+  mode          SubmissionMode
+  status        SubmissionStatus @default(QUEUED)
+  verdict       Verdict?
+  passedCount   Int              @default(0)
+  totalCount    Int              @default(0)
+  maxTimeMs     Int?
+  maxMemoryKb   Int?
+  compileOutput String?
+  /// A short, user-safe explanation when the run failed on OUR side (never internal details).
+  errorMessage  String?
+  /// Which engine produced the result: "mock" now, "judge0" from Phase 9.
+  executor      String
+  createdAt     DateTime         @default(now())
+  completedAt   DateTime?
+
+  user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem            @relation(fields: [problemId], references: [id])
+  results SubmissionResult[]
+
+  @@index([userId, problemId, createdAt])
+  @@index([status])
+}
+
+model SubmissionResult {
+  id           String  @id @default(uuid()) @db.Uuid
+  submissionId String  @db.Uuid
+  testCaseId   String  @db.Uuid
+  verdict      Verdict
+  stdout       String?
+  stderr       String?
+  timeMs       Int?
+  memoryKb     Int?
+  passed       Boolean
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  testCase   TestCase   @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId])
+  @@index([testCaseId])
+}

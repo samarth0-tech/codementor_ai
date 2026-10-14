@@ -1,0 +1,34 @@
+{
+  "name": "codementor-ai",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI-powered coding interview and assessment platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "build:shared": "npm run build -w @codementor/shared",
+    "dev:web": "npm run build:shared && npm run dev -w @codementor/web",
+    "dev:api": "npm run build:shared && npm run dev -w @codementor/api",
+    "build": "npm run build:shared && npm run build -w @codementor/api && npm run build -w @codementor/web",
+    "test": "npm run build:shared && npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run build:shared && npm run typecheck --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm run lint && npm run typecheck",
+    "postinstall": "npm run build:shared"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "22.20.5",
+    "eslint": "9.39.5",
+    "prettier": "3.9.9",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.1"
+  }
+}
