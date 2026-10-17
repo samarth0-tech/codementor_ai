@@ -102,6 +102,48 @@ export class FakeAiProvider implements AiProvider {
               : "Reasonable answer. Keep adding examples and trade-offs.",
         });
       }
+      case "CODE_REVIEW": {
+        const failed = m["verdict"] !== "ACCEPTED";
+        const lines = Number(m["lines"] ?? 1);
+        return JSON.stringify({
+          summary: `Reviewed ${lines} lines of ${str(m["language"])}. ${failed ? "Some tests failed, so check the bug list." : "All tests passed."}`,
+          correctness: {
+            rating: 9,
+            note: failed
+              ? "The approach looks right but a case is mishandled."
+              : "The logic matches the problem.",
+          },
+          readability: { rating: 7, note: "Names are mostly clear." },
+          maintainability: {
+            rating: 6,
+            note: "Consider splitting the logic into small functions.",
+          },
+          complexity: {
+            time: "O(n)",
+            space: "O(1)",
+            explanation: "One pass over the input with constant extra memory.",
+          },
+          bugs: failed
+            ? [
+                {
+                  severity: "HIGH",
+                  title: "Possible edge-case bug",
+                  description: "An edge case may not be handled.",
+                  line: Math.min(1, lines),
+                  fix: "Test the smallest and largest inputs by hand.",
+                },
+              ]
+            : [],
+          suggestions: [
+            {
+              priority: "MEDIUM",
+              title: "Add comments",
+              detail: "Explain the key step in one sentence.",
+            },
+          ],
+          strengths: ["Straightforward structure"],
+        });
+      }
       case "REPORT":
         return JSON.stringify({
           summary: `You completed an interview on ${str(m["topic"])} and scored ${String(m["overall"])}/100 (${str(m["band"])}).`,

@@ -13,6 +13,7 @@ export interface Limits {
   interviewCreate: LimitConfig;
   interviewAnswer: LimitConfig;
   submissionCreate: LimitConfig;
+  codeReview: LimitConfig;
 }
 
 export const defaultLimits: Limits = {
@@ -23,6 +24,8 @@ export const defaultLimits: Limits = {
   interviewAnswer: { windowMs: 10 * 60 * 1000, limit: 60 },
   // Code runs are expensive too (Judge0 from Phase 9): limited per user.
   submissionCreate: { windowMs: 10 * 60 * 1000, limit: 30 },
+  // AI code reviews cost money: limited per user.
+  codeReview: { windowMs: 60 * 60 * 1000, limit: 15 },
 };
 
 /** Who is calling? The real client IP travels inside the signed note (Express only sees Next.js). */

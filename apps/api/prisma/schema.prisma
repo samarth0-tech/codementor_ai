@@ -338,6 +338,7 @@ model Submission {
   user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   problem Problem            @relation(fields: [problemId], references: [id])
   results SubmissionResult[]
+  review  CodeReview?
 
   @@index([userId, problemId, createdAt])
   @@index([status])
@@ -359,4 +360,26 @@ model SubmissionResult {
 
   @@index([submissionId])
   @@index([testCaseId])
+}
+
+model CodeReview {
+  id                    String   @id @default(uuid()) @db.Uuid
+  submissionId          String   @unique @db.Uuid
+  summary               String
+  correctnessRating     Int
+  readabilityRating     Int
+  maintainabilityRating Int
+  /// 0-100, computed by the application from the three ratings (not by the AI).
+  overallScore          Float
+  timeComplexity        String
+  spaceComplexity       String
+  complexityNote        String
+  /// Notes, bugs, suggestions and strengths written by the AI (validated before storing).
+  details               Json
+  /// The real test verdict at the time of the review; it limits the correctness rating.
+  verdictAtReview       Verdict
+  promptVersion         String
+  createdAt             DateTime @default(now())
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 }

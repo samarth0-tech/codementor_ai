@@ -31,6 +31,7 @@ import {
 } from "@/lib/workspace-timer";
 import { CodeEditor } from "./code-editor";
 import { ResultsPanel } from "./results-panel";
+import { ReviewPanel } from "./review-panel";
 import { SubmissionHistory } from "./submission-history";
 
 interface Props {
@@ -262,6 +263,9 @@ export function ProblemWorkspace({ problem, languages, initialSubmissions, state
         <Card className="p-0">
           <ResultsPanel submission={active.data} starting={create.isPending} />
         </Card>
+
+        {/* After a submission finishes: ask the AI to review the code (Phase 10). */}
+        <ReviewPanel submission={active.data} />
       </div>
     </div>
   );

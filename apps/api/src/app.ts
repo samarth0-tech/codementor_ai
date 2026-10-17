@@ -20,6 +20,8 @@ import type { CodeExecutor } from "./modules/submissions/executor.js";
 import { SubmissionRunner } from "./modules/submissions/submission.runner.js";
 import { createSubmissionsRouter } from "./modules/submissions/submissions.routes.js";
 import { SubmissionService } from "./modules/submissions/submissions.service.js";
+import { createReviewsRouter } from "./modules/reviews/reviews.routes.js";
+import { ReviewService } from "./modules/reviews/reviews.service.js";
 import { createHealthRouter } from "./modules/health/health.routes.js";
 import { createCatalogRouter, createProblemsRouter } from "./modules/problems/problems.routes.js";
 import { ProblemService } from "./modules/problems/problems.service.js";
@@ -105,6 +107,11 @@ export function createApp(deps: AppDeps): Express {
       authenticate,
       limits,
     }),
+  );
+  // AI code review of a finished submission (reads stored results only; never runs code).
+  v1.use(
+    "/submissions",
+    createReviewsRouter({ service: new ReviewService(prisma, aiService), authenticate, limits }),
   );
 
   const problems = new ProblemService(

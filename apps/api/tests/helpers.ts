@@ -17,6 +17,7 @@ const relaxedLimits = {
   interviewCreate: { windowMs: 60_000, limit: 10_000 },
   interviewAnswer: { windowMs: 60_000, limit: 10_000 },
   submissionCreate: { windowMs: 60_000, limit: 10_000 },
+  codeReview: { windowMs: 60_000, limit: 10_000 },
 };
 
 export interface TestContext {
