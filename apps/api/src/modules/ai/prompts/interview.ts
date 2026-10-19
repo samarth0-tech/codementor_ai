@@ -20,19 +20,34 @@ export function buildPlanPrompt(input: {
   topic: string;
   difficulty: Difficulty;
   questionCount: number;
+  resumeContext?: string;
 }) {
   return {
     promptVersion: PLAN_PROMPT_VERSION,
     system: [
       "You are a senior software engineer designing a mock technical interview.",
       UNTRUSTED_NOTICE,
+      input.resumeContext
+        ? "Tailor the interview questions to the candidate's actual projects, technologies, and claimed background described in their resume."
+        : "",
       `Plan exactly ${input.questionCount} interview questions as "slots". Cover different sub-topics, ordered from warm-up to hardest, suitable for ${input.difficulty} level.`,
       'Use kind "CONCEPTUAL" for technical-knowledge questions and "BEHAVIORAL" at most once, for a question about working experience.',
       `Shape: {"slots":[{"topic":"short sub-topic","kind":"CONCEPTUAL","focus":"what this question should probe"}]}`,
       JSON_ONLY,
-    ].join("\n"),
-    user: `Main topic:\n${wrapUntrusted("interview_topic", input.topic)}\nDifficulty: ${input.difficulty}\nNumber of slots: ${input.questionCount}`,
-    maxTokens: 900,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    user: [
+      `Main topic:\n${wrapUntrusted("interview_topic", input.topic)}`,
+      `Difficulty: ${input.difficulty}`,
+      `Number of slots: ${input.questionCount}`,
+      input.resumeContext
+        ? `Candidate's Resume Background:\n${wrapUntrusted("untrusted_candidate_resume", input.resumeContext)}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    maxTokens: 1000,
     meta: { ...input },
   };
 }

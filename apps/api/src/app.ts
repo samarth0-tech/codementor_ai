@@ -22,6 +22,8 @@ import { createSubmissionsRouter } from "./modules/submissions/submissions.route
 import { SubmissionService } from "./modules/submissions/submissions.service.js";
 import { createReviewsRouter } from "./modules/reviews/reviews.routes.js";
 import { ReviewService } from "./modules/reviews/reviews.service.js";
+import { createResumesRouter } from "./modules/resumes/resumes.routes.js";
+import { ResumeService } from "./modules/resumes/resumes.service.js";
 import { createHealthRouter } from "./modules/health/health.routes.js";
 import { createCatalogRouter, createProblemsRouter } from "./modules/problems/problems.routes.js";
 import { ProblemService } from "./modules/problems/problems.service.js";
@@ -112,6 +114,12 @@ export function createApp(deps: AppDeps): Express {
   v1.use(
     "/submissions",
     createReviewsRouter({ service: new ReviewService(prisma, aiService), authenticate, limits }),
+  );
+
+  // Resume upload, extraction, and management (Phase 11).
+  v1.use(
+    "/resumes",
+    createResumesRouter({ service: new ResumeService(prisma, aiService), authenticate, limits }),
   );
 
   const problems = new ProblemService(

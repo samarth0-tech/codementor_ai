@@ -99,6 +99,7 @@ function toDetail(row: InterviewRow): InterviewDetail {
   const active = row.status === "IN_PROGRESS";
   return {
     id: row.id,
+    type: row.type,
     topic: row.topic,
     difficulty: row.difficulty,
     status: row.status,
@@ -107,6 +108,7 @@ function toDetail(row: InterviewRow): InterviewDetail {
     answeredCount: row.questions.filter((q) => q.answer).length,
     startedAt: row.startedAt.toISOString(),
     endedAt: row.endedAt?.toISOString() ?? null,
+    resumeId: row.resumeId,
     durationMinutes: row.durationMinutes,
     expiresAt: new Date(row.startedAt.getTime() + row.durationMinutes * 60_000).toISOString(),
     questions: row.questions.map(toQuestion),
@@ -169,6 +171,48 @@ export class InterviewService {
     await this.expireStale(userId);
     await this.assertNoActive(userId);
 
+    // If resumeId is supplied, verify ownership and construct background context
+    let resumeContext: string | undefined;
+    let resumeId: string | null = null;
+    if (input.resumeId) {
+      const resume = await this.prisma.resume.findFirst({
+        where: { id: input.resumeId, userId },
+        select: {
+          id: true,
+          skills: true,
+          technologies: true,
+          projects: true,
+          experience: true,
+          education: true,
+        },
+      });
+      if (!resume) {
+        throw AppError.notFound("Resume not found");
+      }
+      resumeId = resume.id;
+      const skills = Array.isArray(resume.skills) ? resume.skills.join(", ") : "";
+      const tech = Array.isArray(resume.technologies) ? resume.technologies.join(", ") : "";
+      const proj = Array.isArray(resume.projects)
+        ? (resume.projects as Array<{ title?: string; technologies?: string[] }>)
+            .map((p) => `${p.title || "Project"}: ${(p.technologies || []).join(", ")}`)
+            .join("; ")
+        : "";
+      const exp = Array.isArray(resume.experience)
+        ? (resume.experience as Array<{ role?: string; company?: string }>)
+            .map((e) => `${e.role || "Role"} at ${e.company || "Company"}`)
+            .join("; ")
+        : "";
+
+      resumeContext = [
+        skills ? `Skills: ${skills}` : null,
+        tech ? `Technologies: ${tech}` : null,
+        proj ? `Projects: ${proj}` : null,
+        exp ? `Experience: ${exp}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n");
+    }
+
     // AI work happens BEFORE anything is written, so a failure leaves no half-created interview.
     const plan = await this.ai.generateStructured({
       userId,
@@ -176,7 +220,7 @@ export class InterviewService {
       tier: "reasoning",
       temperature: 0.5,
       schema: planSchemaFor(input.questionCount),
-      ...buildPlanPrompt(input),
+      ...buildPlanPrompt({ ...input, resumeContext }),
     });
     const firstSlot = plan.slots[0] as PlanSlot;
     const text = await this.writeQuestion(userId, input, firstSlot, 0, "same", []);
@@ -192,11 +236,13 @@ export class InterviewService {
       return tx.interview.create({
         data: {
           userId,
+          type: input.type === "RESUME" ? "RESUME" : "TOPIC",
           topic: input.topic,
           difficulty: input.difficulty,
           plan: plan.slots,
           plannedQuestionCount: input.questionCount,
           durationMinutes: input.durationMinutes,
+          resumeId,
           questions: { create: { orderIndex: 0, slotIndex: 0, kind: firstSlot.kind, text } },
         },
         include: detailInclude,

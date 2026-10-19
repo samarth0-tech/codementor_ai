@@ -114,7 +114,7 @@ describe("/api/backend forwarding route", () => {
     const res = await POST(
       req("/api/backend/resumes", {
         method: "POST",
-        headers: { origin: "http://localhost:3000", "content-length": String(5 * 1024 * 1024) },
+        headers: { origin: "http://localhost:3000", "content-length": String(6 * 1024 * 1024) },
         body: "x",
       }),
       ctx("resumes"),

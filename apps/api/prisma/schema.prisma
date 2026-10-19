@@ -33,6 +33,7 @@ model User {
   interviews      Interview[]
   aiCalls         AiCall[]
   submissions     Submission[]
+  resumes         Resume[]
 }
 
 enum Difficulty {
@@ -198,10 +199,12 @@ model Interview {
   startedAt            DateTime        @default(now())
   endedAt              DateTime?
   overallScore         Float?
+  resumeId             String?         @db.Uuid
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
 
   user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume    Resume?             @relation(fields: [resumeId], references: [id], onDelete: SetNull)
   questions InterviewQuestion[]
   report    InterviewReport?
 
@@ -382,4 +385,25 @@ model CodeReview {
   createdAt             DateTime @default(now())
 
   submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+}
+
+model Resume {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  fileName      String
+  fileSize      Int
+  mimeType      String
+  extractedText String   @db.Text
+  skills        Json     // string[]
+  technologies  Json     // string[]
+  projects      Json     // ResumeProject[]
+  experience    Json     // ResumeExperience[]
+  education     Json     // ResumeEducation[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interviews Interview[]
+
+  @@index([userId, createdAt])
 }

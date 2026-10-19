@@ -10,10 +10,12 @@ export type QuestionKind = (typeof QUESTION_KINDS)[number];
 export const MAX_ANSWER_CHARS = 4000;
 
 export const createInterviewSchema = z.object({
+  type: z.enum(["TOPIC", "RESUME"]).default("TOPIC"),
   topic: z.string().trim().min(2, "Topic is too short").max(80),
   difficulty: z.enum(DIFFICULTIES),
   questionCount: z.number().int().min(3).max(10).default(5),
   durationMinutes: z.number().int().min(10).max(120).default(30),
+  resumeId: z.string().uuid().optional(),
 });
 export type CreateInterviewInput = z.infer<typeof createInterviewSchema>;
 
@@ -68,6 +70,7 @@ export interface ReportDto {
 
 export interface InterviewSummary {
   id: string;
+  type?: "TOPIC" | "RESUME" | "MIXED";
   topic: string;
   difficulty: Difficulty;
   status: InterviewStatus;
@@ -76,6 +79,7 @@ export interface InterviewSummary {
   answeredCount: number;
   startedAt: string;
   endedAt: string | null;
+  resumeId?: string | null;
 }
 
 export interface InterviewDetail extends InterviewSummary {

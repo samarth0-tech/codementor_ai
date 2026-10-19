@@ -2,7 +2,7 @@
 // so they are easy to unit test. These rules stop the route from becoming an open proxy (SSRF)
 // or a CSRF target.
 
-export const MAX_BODY_BYTES = 2.5 * 1024 * 1024; // below Vercel's request body limit
+export const MAX_BODY_BYTES = 5.5 * 1024 * 1024; // supports 5MB resume upload + headers
 
 const SAFE_SEGMENT = /^[A-Za-z0-9._~-]+$/;
 

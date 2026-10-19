@@ -151,6 +151,47 @@ export class FakeAiProvider implements AiProvider {
           weaknesses: ["Some answers lacked depth"],
           recommendations: ["Review the weakest sub-topics and practise explaining them aloud"],
         });
+      case "RESUME_PARSE":
+        return JSON.stringify({
+          skills: ["TypeScript", "Node.js", "React", "PostgreSQL", "System Design"],
+          technologies: ["Docker", "Git", "Redis", "AWS", "Prisma"],
+          projects: [
+            {
+              title: "CodeMentor Platform",
+              description: "AI-assisted coding interview and review platform with real-time feedback",
+              technologies: ["TypeScript", "Next.js", "PostgreSQL", "Docker"],
+            },
+            {
+              title: "Distributed Cache Service",
+              description: "High-throughput in-memory LRU cache with consistent hashing",
+              technologies: ["Go", "Redis", "gRPC"],
+            },
+          ],
+          experience: [
+            {
+              role: "Senior Software Engineer",
+              company: "TechCorp Labs",
+              duration: "2023 - Present",
+              highlights: [
+                "Led architecture of cloud-native microservices",
+                "Reduced API latency by 45%",
+              ],
+            },
+            {
+              role: "Full Stack Developer",
+              company: "Startup Co",
+              duration: "2021 - 2023",
+              highlights: ["Developed customer-facing dashboard", "Built automated CI/CD pipeline"],
+            },
+          ],
+          education: [
+            {
+              degree: "B.S. in Computer Science",
+              institution: "State University",
+              year: "2021",
+            },
+          ],
+        });
       default:
         return "{}";
     }
