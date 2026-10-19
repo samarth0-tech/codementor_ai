@@ -103,7 +103,12 @@ describe("loadEnv: code execution (Piston)", () => {
   });
 
   it("allows Piston in production", () => {
-    const env = loadEnv({ ...base, NODE_ENV: "production", CODE_EXECUTOR: "piston" });
+    const env = loadEnv({
+      ...base,
+      NODE_ENV: "production",
+      CODE_EXECUTOR: "piston",
+      AI_PROVIDER: "anthropic",
+    });
     expect(env.CODE_EXECUTOR).toBe("piston");
   });
 

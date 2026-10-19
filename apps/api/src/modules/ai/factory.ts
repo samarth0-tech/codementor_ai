@@ -4,7 +4,7 @@ import type { Logger } from "../../lib/logger.js";
 import type { AiProvider } from "./provider.js";
 import { AnthropicProvider, type MessagesClient } from "./providers/anthropic.js";
 import { FakeAiProvider } from "./providers/fake.js";
-import { GroqProvider } from './providers/groq';
+import { GroqProvider } from "./providers/groq.js";
 /** Chooses the AI provider from environment config. Returns null when AI is not configured. */
 export function createAiProvider(env: Env, logger: Logger): AiProvider | null {
   if (env.AI_PROVIDER === "fake") {
