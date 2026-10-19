@@ -12,11 +12,11 @@ export function createAiProvider(env: Env, logger: Logger): AiProvider | null {
     return new FakeAiProvider();
   }
   if (env.AI_PROVIDER === "groq") {
-  if (!env.GROQ_API_KEY) {
-    throw new Error("GROQ_API_KEY is required when AI_PROVIDER=groq");
+    if (!env.GROQ_API_KEY) {
+      throw new Error("GROQ_API_KEY is required when AI_PROVIDER=groq");
+    }
+    return new GroqProvider(env.GROQ_API_KEY);
   }
-  return new GroqProvider(env.GROQ_API_KEY);
-}
   if (!env.ANTHROPIC_API_KEY) {
     logger.warn("ANTHROPIC_API_KEY is not set: AI endpoints will answer 503 AI_NOT_CONFIGURED");
     return null;

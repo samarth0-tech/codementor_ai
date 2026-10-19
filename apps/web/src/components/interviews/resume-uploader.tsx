@@ -5,7 +5,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ResumeDetailDto, ResumeSummaryDto } from "@codementor/shared";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api/client";
 import { formatFileSize, formatResumeDate } from "@/lib/resume-ui";
 
@@ -59,7 +58,6 @@ export function ResumeUploader({ selectedResumeId, onSelectResume }: ResumeUploa
   };
 
   const resumes = data?.resumes ?? [];
-  const selectedResume = resumes.find((r) => r.id === selectedResumeId);
 
   return (
     <div className="space-y-4">
@@ -79,7 +77,9 @@ export function ResumeUploader({ selectedResumeId, onSelectResume }: ResumeUploa
           htmlFor="resume-file-input"
           className="inline-block cursor-pointer font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
         >
-          {upload.isPending ? "Uploading and extracting resume..." : "Click to upload resume (PDF or DOCX, max 5MB)"}
+          {upload.isPending
+            ? "Uploading and extracting resume..."
+            : "Click to upload resume (PDF or DOCX, max 5MB)"}
         </label>
         <p className="mt-1 text-xs text-slate-500">
           Our AI extracts your skills, technologies, and projects to customize interview questions.
@@ -109,7 +109,8 @@ export function ResumeUploader({ selectedResumeId, onSelectResume }: ResumeUploa
                   <div className="space-y-1">
                     <p className="text-sm font-medium">{resume.fileName}</p>
                     <p className="text-xs text-slate-500">
-                      {formatFileSize(resume.fileSize)} • Uploaded {formatResumeDate(resume.createdAt)}
+                      {formatFileSize(resume.fileSize)} • Uploaded{" "}
+                      {formatResumeDate(resume.createdAt)}
                     </p>
                     {resume.skills.length > 0 ? (
                       <div className="flex flex-wrap gap-1 pt-1">

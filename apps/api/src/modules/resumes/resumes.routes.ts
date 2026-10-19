@@ -32,34 +32,42 @@ export function createResumesRouter({ service, authenticate, limits }: Deps): Ro
     res.json({ resumes });
   });
 
-  router.post("/upload", uploadLimit, (req, res, next) => {
-    upload.single("resume")(req, res, (err) => {
-      if (err) {
-        if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
-          return next(
-            AppError.badRequest(
-              `File exceeds size limit of ${MAX_RESUME_FILE_BYTES / (1024 * 1024)}MB`,
-              "FILE_TOO_LARGE",
-            ),
-          );
+  router.post(
+    "/upload",
+    uploadLimit,
+    (req, res, next) => {
+      upload.single("resume")(req, res, (err) => {
+        if (err) {
+          if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+            return next(
+              AppError.badRequest(
+                `File exceeds size limit of ${MAX_RESUME_FILE_BYTES / (1024 * 1024)}MB`,
+                "FILE_TOO_LARGE",
+              ),
+            );
+          }
+          return next(AppError.badRequest("File upload failed", "UPLOAD_FAILED"));
         }
-        return next(AppError.badRequest("File upload failed", "UPLOAD_FAILED"));
+        next();
+      });
+    },
+    async (req, res) => {
+      if (!req.file) {
+        throw AppError.badRequest(
+          "No file uploaded. Please select a PDF or DOCX resume.",
+          "NO_FILE",
+        );
       }
-      next();
-    });
-  }, async (req, res) => {
-    if (!req.file) {
-      throw AppError.badRequest("No file uploaded. Please select a PDF or DOCX resume.", "NO_FILE");
-    }
 
-    const resume = await service.uploadAndParse(
-      me(req),
-      req.file.buffer,
-      req.file.originalname,
-      req.file.mimetype,
-    );
-    res.status(201).json({ resume });
-  });
+      const resume = await service.uploadAndParse(
+        me(req),
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+      );
+      res.status(201).json({ resume });
+    },
+  );
 
   router.get("/:id", async (req, res) => {
     const resume = await service.get(me(req), paramId(req));

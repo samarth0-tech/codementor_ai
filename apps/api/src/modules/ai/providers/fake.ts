@@ -158,7 +158,8 @@ export class FakeAiProvider implements AiProvider {
           projects: [
             {
               title: "CodeMentor Platform",
-              description: "AI-assisted coding interview and review platform with real-time feedback",
+              description:
+                "AI-assisted coding interview and review platform with real-time feedback",
               technologies: ["TypeScript", "Next.js", "PostgreSQL", "Docker"],
             },
             {

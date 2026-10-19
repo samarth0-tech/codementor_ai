@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { detectMagicMimeType, extractResumeText } from "../src/modules/resumes/extractor.js";
 import {
-  detectMagicMimeType,
-  extractResumeText,
-} from "../src/modules/resumes/extractor.js";
-import { buildResumeParsePrompt, buildResumeInterviewPlanPrompt } from "../src/modules/ai/prompts/resume.js";
+  buildResumeParsePrompt,
+  buildResumeInterviewPlanPrompt,
+} from "../src/modules/ai/prompts/resume.js";
 
 describe("Resume Extractor unit tests", () => {
   it("detects PDF magic header bytes", () => {

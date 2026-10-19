@@ -22,22 +22,12 @@ export function detectMagicMimeType(buffer: Buffer): AllowedResumeMimeType | nul
   if (buffer.length < 4) return null;
 
   // PDF magic number: %PDF (0x25 0x50 0x44 0x46)
-  if (
-    buffer[0] === 0x25 &&
-    buffer[1] === 0x50 &&
-    buffer[2] === 0x44 &&
-    buffer[3] === 0x46
-  ) {
+  if (buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46) {
     return "application/pdf";
   }
 
   // DOCX is a zip archive: PK\x03\x04 (0x50 0x4B 0x03 0x04)
-  if (
-    buffer[0] === 0x50 &&
-    buffer[1] === 0x4b &&
-    buffer[2] === 0x03 &&
-    buffer[3] === 0x04
-  ) {
+  if (buffer[0] === 0x50 && buffer[1] === 0x4b && buffer[2] === 0x03 && buffer[3] === 0x04) {
     return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   }
 
@@ -70,6 +60,13 @@ export async function extractResumeText(
       "Only PDF (.pdf) and Microsoft Word (.docx) documents are supported",
       "INVALID_FILE_TYPE",
     );
+  }
+
+  if (
+    declaredMimeType &&
+    !ALLOWED_RESUME_MIME_TYPES.includes(declaredMimeType as AllowedResumeMimeType)
+  ) {
+    throw AppError.badRequest("Unsupported MIME type", "INVALID_FILE_TYPE");
   }
 
   const detectedMime = detectMagicMimeType(buffer);

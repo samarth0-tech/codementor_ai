@@ -36,7 +36,10 @@ export class GroqProvider implements AiProvider {
         if (response.status >= 500 || response.status === 408) {
           throw new AiProviderError("The Groq service is temporarily unavailable", "unavailable");
         }
-        throw new AiProviderError(`Groq API error (${response.status}): ${errorText}`, "bad_request");
+        throw new AiProviderError(
+          `Groq API error (${response.status}): ${errorText}`,
+          "bad_request",
+        );
       }
 
       const data = (await response.json()) as {

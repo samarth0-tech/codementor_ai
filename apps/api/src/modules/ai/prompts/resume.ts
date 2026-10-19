@@ -1,4 +1,4 @@
-import { RESUME_PROMPT_VERSION, type ResumeParsedData } from "@codementor/shared";
+import { RESUME_PROMPT_VERSION } from "@codementor/shared";
 import { wrapUntrusted } from "../untrusted.js";
 
 const RESUME_NOTICE =
@@ -48,10 +48,16 @@ export function buildResumeInterviewPlanPrompt(params: {
     `Skills: ${params.skills.slice(0, 15).join(", ") || "General software development"}`,
     `Technologies: ${params.technologies.slice(0, 15).join(", ") || "Standard tooling"}`,
     params.projects.length > 0
-      ? `Projects: ${params.projects.slice(0, 3).map((p) => `${p.title} (${(p.technologies || []).join(", ")})`).join("; ")}`
+      ? `Projects: ${params.projects
+          .slice(0, 3)
+          .map((p) => `${p.title} (${(p.technologies || []).join(", ")})`)
+          .join("; ")}`
       : null,
     params.experience.length > 0
-      ? `Experience: ${params.experience.slice(0, 3).map((e) => `${e.role || "Engineer"} at ${e.company || "Company"}`).join("; ")}`
+      ? `Experience: ${params.experience
+          .slice(0, 3)
+          .map((e) => `${e.role || "Engineer"} at ${e.company || "Company"}`)
+          .join("; ")}`
       : null,
   ]
     .filter(Boolean)
@@ -66,7 +72,7 @@ export function buildResumeInterviewPlanPrompt(params: {
       "- kind: one of CONCEPTUAL, CODING, BEHAVIORAL",
       "- focus: brief description of what this question targets (e.g., 'Deep dive into caching strategy used in Project X')",
       "- difficulty: the difficulty level",
-      "Reply with ONLY a JSON object: {\"slots\": [{\"kind\": \"...\", \"focus\": \"...\", \"difficulty\": \"...\"}]}",
+      'Reply with ONLY a JSON object: {"slots": [{"kind": "...", "focus": "...", "difficulty": "..."}]}',
     ].join("\n"),
     user: [
       `Target Topic: ${params.topic}`,

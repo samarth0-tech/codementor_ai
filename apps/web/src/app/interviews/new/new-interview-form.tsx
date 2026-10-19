@@ -44,7 +44,9 @@ import type { ResumeDetailDto, ResumeSummaryDto } from "@codementor/shared";
 export function NewInterviewForm() {
   const router = useRouter();
   const [mode, setMode] = useState<"TOPIC" | "RESUME">("TOPIC");
-  const [selectedResume, setSelectedResume] = useState<ResumeDetailDto | ResumeSummaryDto | null>(null);
+  const [selectedResume, setSelectedResume] = useState<ResumeDetailDto | ResumeSummaryDto | null>(
+    null,
+  );
   const [fieldError, setFieldError] = useState<string | null>(null);
 
   const create = useMutation({
@@ -61,7 +63,11 @@ export function NewInterviewForm() {
       return;
     }
 
-    const topicValue = String(form.get("topic") || "").trim() || (selectedResume ? `${selectedResume.skills.slice(0, 3).join(", ") || "Full Stack"} (Resume-based)` : "Technical Interview");
+    const topicValue =
+      String(form.get("topic") || "").trim() ||
+      (selectedResume
+        ? `${selectedResume.skills.slice(0, 3).join(", ") || "Full Stack"} (Resume-based)`
+        : "Technical Interview");
 
     const parsed = createInterviewSchema.safeParse({
       type: mode,
@@ -139,7 +145,8 @@ export function NewInterviewForm() {
             />
             {selectedResume ? (
               <div className="rounded-md bg-blue-50/60 p-3 text-xs text-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
-                <span className="font-semibold">Selected: {selectedResume.fileName}</span> — Questions will probe your projects, technologies, and claimed background.
+                <span className="font-semibold">Selected: {selectedResume.fileName}</span> —
+                Questions will probe your projects, technologies, and claimed background.
               </div>
             ) : null}
           </div>
@@ -149,7 +156,11 @@ export function NewInterviewForm() {
           label={mode === "RESUME" ? "Focus Topic or Domain (Optional)" : "Topic"}
           name="topic"
           list="topic-ideas"
-          placeholder={mode === "RESUME" ? "e.g. Distributed Systems (or leave blank to use resume skills)" : "e.g. JavaScript closures"}
+          placeholder={
+            mode === "RESUME"
+              ? "e.g. Distributed Systems (or leave blank to use resume skills)"
+              : "e.g. JavaScript closures"
+          }
           maxLength={80}
           required={mode === "TOPIC"}
           {...(fieldError ? { error: fieldError } : {})}
@@ -199,7 +210,11 @@ export function NewInterviewForm() {
         </p>
 
         <Button type="submit" className="w-full" disabled={create.isPending}>
-          {create.isPending ? "Preparing your tailored interview..." : mode === "RESUME" ? "Start resume interview" : "Start interview"}
+          {create.isPending
+            ? "Preparing your tailored interview..."
+            : mode === "RESUME"
+              ? "Start resume interview"
+              : "Start interview"}
         </Button>
       </form>
     </div>

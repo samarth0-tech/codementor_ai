@@ -12,7 +12,7 @@ const envSchema = z.object({
   BCRYPT_COST: z.coerce.number().int().min(4).max(15).default(12),
 
   // --- AI (Claude). Without a key, AI endpoints answer 503 AI_NOT_CONFIGURED; the rest still works.
-  AI_PROVIDER: z.enum(['fake', 'anthropic', 'groq']).default('fake'),
+  AI_PROVIDER: z.enum(["fake", "anthropic", "groq"]).default("fake"),
   GROQ_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
   AI_MODEL_REASONING: z.string().min(1).default("claude-sonnet-5-5"),
