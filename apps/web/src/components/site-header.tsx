@@ -19,6 +19,9 @@ export async function SiteHeader() {
               <ButtonLink href="/problems" variant="ghost">
                 Problems
               </ButtonLink>
+              <ButtonLink href="/paths" variant="ghost">
+                Paths
+              </ButtonLink>
               <ButtonLink href="/interviews" variant="ghost">
                 Interviews
               </ButtonLink>

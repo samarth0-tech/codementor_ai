@@ -7,3 +7,4 @@ export * from "./submissions.js";
 export * from "./reviews.js";
 export * from "./resumes.js";
 export * from "./dashboard.js";
+export * from "./paths.js";

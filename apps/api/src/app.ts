@@ -26,6 +26,8 @@ import { createResumesRouter } from "./modules/resumes/resumes.routes.js";
 import { ResumeService } from "./modules/resumes/resumes.service.js";
 import { createDashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 import { DashboardService } from "./modules/dashboard/dashboard.service.js";
+import { createPathsRouter } from "./modules/paths/paths.routes.js";
+import { PathsService } from "./modules/paths/paths.service.js";
 import { createHealthRouter } from "./modules/health/health.routes.js";
 import { createCatalogRouter, createProblemsRouter } from "./modules/problems/problems.routes.js";
 import { ProblemService } from "./modules/problems/problems.service.js";
@@ -129,6 +131,9 @@ export function createApp(deps: AppDeps): Express {
     "/dashboard",
     createDashboardRouter({ service: new DashboardService(prisma), authenticate }),
   );
+
+  // Learning paths with progress tracking (Phase 13).
+  v1.use("/paths", createPathsRouter({ service: new PathsService(prisma), authenticate }));
 
   const problems = new ProblemService(
     prisma,
