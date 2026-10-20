@@ -158,6 +158,7 @@ function AnswerBox({
 }
 
 export function InterviewRoom({ initial }: { initial: InterviewDetail }) {
+  const [viewTab, setViewTab] = useState<"report" | "questions">("report");
   const queryClient = useQueryClient();
   const key = ["interview", initial.id];
   const { data: interview } = useQuery({
@@ -224,72 +225,111 @@ export function InterviewRoom({ initial }: { initial: InterviewDetail }) {
         </Alert>
       ) : null}
 
-      {interview.questions.map((q) => (
-        <QuestionCard key={q.id} q={q} number={q.slotIndex + 1} />
-      ))}
-
-      {interview.needsRetry ? (
-        <Alert tone="info">
-          Your answer is saved, but the next step did not finish (the AI may be busy).{" "}
-          <button
-            type="button"
-            className="font-medium underline disabled:opacity-60"
-            disabled={busy}
-            onClick={() => retry.mutate()}
-          >
-            {retry.isPending ? "Retrying..." : "Retry now"}
-          </button>
-        </Alert>
-      ) : null}
-
-      {current ? (
-        <AnswerBox
-          key={current.id}
-          question={current}
-          pending={submit.isPending}
-          onSubmit={(answer) => {
-            submit.mutate({
-              questionId: current.id,
-              answer,
-              timeTakenSec: secondsSince(current.askedAt, Date.now()),
-            });
-          }}
-        />
-      ) : null}
-
-      {(active || interview.status === "EXPIRED") && interview.answeredCount > 0 ? (
-        <div className="flex flex-wrap justify-end gap-2">
-          {active ? (
-            <Button
-              variant="ghost"
-              disabled={busy}
-              onClick={() => {
-                if (window.confirm("Abandon this interview? You will not get a report."))
-                  abandon.mutate();
-              }}
+      {interview.report ? (
+        <div className="space-y-4">
+          <div className="flex border-b border-slate-200 dark:border-slate-700">
+            <button
+              type="button"
+              onClick={() => setViewTab("report")}
+              className={`border-b-2 px-4 py-2.5 text-sm font-semibold transition ${
+                viewTab === "report"
+                  ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                  : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
             >
-              Abandon
-            </Button>
-          ) : null}
-          <Button variant="secondary" disabled={busy} onClick={() => complete.mutate()}>
-            {complete.isPending ? "Preparing report..." : "Finish and get report"}
-          </Button>
-        </div>
-      ) : active ? (
-        <div className="flex justify-end">
-          <Button
-            variant="ghost"
-            disabled={busy}
-            onClick={() => {
-              if (window.confirm("Abandon this interview?")) abandon.mutate();
-            }}
-          >
-            Abandon
-          </Button>
-        </div>
-      ) : null}
+              📊 Performance Report & Plan
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewTab("questions")}
+              className={`border-b-2 px-4 py-2.5 text-sm font-semibold transition ${
+                viewTab === "questions"
+                  ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                  : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
+            >
+              📝 Question-by-Question Review ({interview.questions.length})
+            </button>
+          </div>
 
-      {interview.report ? <ReportView report={interview.report} /> : null}
+          {viewTab === "report" ? (
+            <ReportView report={interview.report} />
+          ) : (
+            <div className="space-y-4">
+              {interview.questions.map((q) => (
+                <QuestionCard key={q.id} q={q} number={q.slotIndex + 1} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {interview.questions.map((q) => (
+            <QuestionCard key={q.id} q={q} number={q.slotIndex + 1} />
+          ))}
+
+          {interview.needsRetry ? (
+            <Alert tone="info">
+              Your answer is saved, but the next step did not finish (the AI may be busy).{" "}
+              <button
+                type="button"
+                className="font-medium underline disabled:opacity-60"
+                disabled={busy}
+                onClick={() => retry.mutate()}
+              >
+                {retry.isPending ? "Retrying..." : "Retry now"}
+              </button>
+            </Alert>
+          ) : null}
+
+          {current ? (
+            <AnswerBox
+              key={current.id}
+              question={current}
+              pending={submit.isPending}
+              onSubmit={(answer) => {
+                submit.mutate({
+                  questionId: current.id,
+                  answer,
+                  timeTakenSec: secondsSince(current.askedAt, Date.now()),
+                });
+              }}
+            />
+          ) : null}
+
+          {(active || interview.status === "EXPIRED") && interview.answeredCount > 0 ? (
+            <div className="flex flex-wrap justify-end gap-2">
+              {active ? (
+                <Button
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => {
+                    if (window.confirm("Abandon this interview? You will not get a report."))
+                      abandon.mutate();
+                  }}
+                >
+                  Abandon
+                </Button>
+              ) : null}
+              <Button variant="secondary" disabled={busy} onClick={() => complete.mutate()}>
+                {complete.isPending ? "Preparing report..." : "Finish and get report"}
+              </Button>
+            </div>
+          ) : active ? (
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                disabled={busy}
+                onClick={() => {
+                  if (window.confirm("Abandon this interview?")) abandon.mutate();
+                }}
+              >
+                Abandon
+              </Button>
+            </div>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }

@@ -53,6 +53,20 @@ export interface QuestionDto {
   answer: { text: string; answeredAt: string; evaluation: EvaluationDto | null } | null;
 }
 
+export interface SuggestedPracticeProblem {
+  slug: string;
+  title: string;
+  difficulty: Difficulty;
+  reason: string;
+}
+
+export interface ImprovementPlanDto {
+  targetAreas: string[];
+  suggestedProblems: SuggestedPracticeProblem[];
+  keyAdvice: string[];
+  disclaimer: string;
+}
+
 export interface ReportDto {
   overallScore: number;
   correctnessScore: number;
@@ -66,6 +80,7 @@ export interface ReportDto {
   /** false when the AI narrative failed and a plain fallback summary was stored instead. */
   aiNarrative: boolean;
   generatedAt: string;
+  improvementPlan?: ImprovementPlanDto;
 }
 
 export interface InterviewSummary {

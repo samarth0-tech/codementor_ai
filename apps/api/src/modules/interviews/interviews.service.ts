@@ -1,12 +1,14 @@
-import type {
-  CreateInterviewInput,
-  EvaluationDto,
-  InterviewDetail,
-  InterviewSummary,
-  Paginated,
-  QuestionDto,
-  ReportDto,
-  SubmitAnswerInput,
+import {
+  generateImprovementPlan,
+  type CreateInterviewInput,
+  type Difficulty,
+  type EvaluationDto,
+  type InterviewDetail,
+  type InterviewSummary,
+  type Paginated,
+  type QuestionDto,
+  type ReportDto,
+  type SubmitAnswerInput,
 } from "@codementor/shared";
 import { z } from "zod";
 import { AppError } from "../../lib/errors.js";
@@ -78,7 +80,13 @@ function toQuestion(q: QuestionRow): QuestionDto {
   };
 }
 
-function toReport(r: NonNullable<InterviewRow["report"]>): ReportDto {
+function toReport(
+  r: NonNullable<InterviewRow["report"]>,
+  topic = "General Technical Interview",
+  difficulty: Difficulty = "MEDIUM",
+): ReportDto {
+  const weaknesses = strings(r.weaknesses);
+  const recommendations = strings(r.recommendations);
   return {
     overallScore: r.overallScore,
     correctnessScore: r.correctnessScore,
@@ -87,10 +95,16 @@ function toReport(r: NonNullable<InterviewRow["report"]>): ReportDto {
     band: r.band,
     summary: r.summary,
     strengths: strings(r.strengths),
-    weaknesses: strings(r.weaknesses),
-    recommendations: strings(r.recommendations),
+    weaknesses,
+    recommendations,
     aiNarrative: r.aiNarrative,
     generatedAt: r.generatedAt.toISOString(),
+    improvementPlan: generateImprovementPlan({
+      topic,
+      weaknesses,
+      recommendations,
+      difficulty,
+    }),
   };
 }
 
@@ -114,7 +128,7 @@ function toDetail(row: InterviewRow): InterviewDetail {
     questions: row.questions.map(toQuestion),
     currentQuestionId: active && last && !last.answer ? last.id : null,
     needsRetry: active && !!last?.answer,
-    report: row.report ? toReport(row.report) : null,
+    report: row.report ? toReport(row.report, row.topic, row.difficulty) : null,
   };
 }
 
@@ -162,7 +176,7 @@ export class InterviewService {
   async getReport(userId: string, id: string): Promise<ReportDto> {
     const row = await this.loadOwned(userId, id);
     if (!row.report) throw AppError.notFound("The report is not available yet");
-    return toReport(row.report);
+    return toReport(row.report, row.topic, row.difficulty);
   }
 
   // --------------------------------------------------------------- commands
