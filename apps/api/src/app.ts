@@ -24,6 +24,8 @@ import { createReviewsRouter } from "./modules/reviews/reviews.routes.js";
 import { ReviewService } from "./modules/reviews/reviews.service.js";
 import { createResumesRouter } from "./modules/resumes/resumes.routes.js";
 import { ResumeService } from "./modules/resumes/resumes.service.js";
+import { createDashboardRouter } from "./modules/dashboard/dashboard.routes.js";
+import { DashboardService } from "./modules/dashboard/dashboard.service.js";
 import { createHealthRouter } from "./modules/health/health.routes.js";
 import { createCatalogRouter, createProblemsRouter } from "./modules/problems/problems.routes.js";
 import { ProblemService } from "./modules/problems/problems.service.js";
@@ -120,6 +122,12 @@ export function createApp(deps: AppDeps): Express {
   v1.use(
     "/resumes",
     createResumesRouter({ service: new ResumeService(prisma, aiService), authenticate, limits }),
+  );
+
+  // User dashboard metrics and activity (Phase 12).
+  v1.use(
+    "/dashboard",
+    createDashboardRouter({ service: new DashboardService(prisma), authenticate }),
   );
 
   const problems = new ProblemService(
