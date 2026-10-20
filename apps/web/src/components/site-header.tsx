@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { signOutAction } from "@/app/(auth)/actions";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { NotificationBell } from "@/components/notification-bell";
 
 export async function SiteHeader() {
   const session = await auth();
@@ -25,6 +26,7 @@ export async function SiteHeader() {
               <ButtonLink href="/interviews" variant="ghost">
                 Interviews
               </ButtonLink>
+              <NotificationBell />
               <span className="hidden text-sm text-slate-600 sm:inline dark:text-slate-300">
                 {user.name}
               </span>

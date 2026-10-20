@@ -510,6 +510,24 @@ export class InterviewService {
         },
       });
     });
+
+    try {
+      const score = Math.round(report.overallScore);
+      await this.prisma.notification.upsert({
+        where: { userId_dedupeKey: { userId, dedupeKey: `interview-${interviewId}` } },
+        create: {
+          userId,
+          type: "INTERVIEW_COMPLETED",
+          title: "Mock Interview Completed",
+          message: `Your interview on "${interview.topic}" is complete. Score: ${score}/100 with an improvement plan ready.`,
+          link: `/interviews/${interviewId}`,
+          dedupeKey: `interview-${interviewId}`,
+        },
+        update: {},
+      });
+    } catch {
+      // Notification is best-effort and never breaks interview completion
+    }
   }
 
   private writeQuestion(

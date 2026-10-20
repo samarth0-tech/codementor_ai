@@ -28,6 +28,8 @@ import { createDashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 import { DashboardService } from "./modules/dashboard/dashboard.service.js";
 import { createPathsRouter } from "./modules/paths/paths.routes.js";
 import { PathsService } from "./modules/paths/paths.service.js";
+import { createNotificationsRouter } from "./modules/notifications/notifications.routes.js";
+import { NotificationsService } from "./modules/notifications/notifications.service.js";
 import { createHealthRouter } from "./modules/health/health.routes.js";
 import { createCatalogRouter, createProblemsRouter } from "./modules/problems/problems.routes.js";
 import { ProblemService } from "./modules/problems/problems.service.js";
@@ -134,6 +136,13 @@ export function createApp(deps: AppDeps): Express {
 
   // Learning paths with progress tracking (Phase 13).
   v1.use("/paths", createPathsRouter({ service: new PathsService(prisma), authenticate }));
+
+  // In-app notifications & preferences (Phase 15).
+  const notificationsService = new NotificationsService(prisma);
+  v1.use(
+    "/notifications",
+    createNotificationsRouter({ service: notificationsService, authenticate }),
+  );
 
   const problems = new ProblemService(
     prisma,

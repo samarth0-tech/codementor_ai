@@ -30,6 +30,7 @@ const submissionSelect = {
   compileOutput: true,
   problem: {
     select: {
+      slug: true,
       title: true,
       description: true,
       inputFormat: true,
@@ -251,6 +252,24 @@ export class ReviewService {
           promptVersion: prompt.promptVersion,
         },
       });
+
+      try {
+        await this.prisma.notification.upsert({
+          where: { userId_dedupeKey: { userId, dedupeKey: `review-${row.id}` } },
+          create: {
+            userId,
+            type: "CODE_REVIEW_COMPLETED",
+            title: "AI Code Review Ready",
+            message: `Review completed for "${row.problem.title}" with a quality score of ${Math.round(saved.overallScore)}/100.`,
+            link: `/problems/${row.problem.slug}`,
+            dedupeKey: `review-${row.id}`,
+          },
+          update: {},
+        });
+      } catch {
+        // Notification is best-effort and never breaks review creation
+      }
+
       return toDto(saved);
     } catch (err) {
       // Another server instance finished first: that review wins.
