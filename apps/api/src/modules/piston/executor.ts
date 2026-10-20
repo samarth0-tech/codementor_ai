@@ -10,11 +10,25 @@ import {
 } from "../submissions/executor.js";
 import { MAX_CAPTURE_CHARS, MAX_COMPILE_CHARS, truncate } from "../judge0/limits.js";
 import { LANGUAGE_MAPPINGS, getSupportedLanguages } from "./languages.js";
-import type { PistonClient } from "./types.js";
+import type { PistonClient, PistonExecuteResult } from "./types.js";
 
 export interface PistonExecutorOptions {
   timeoutMs?: number;
   logger?: Logger;
+}
+
+export const MIN_PISTON_CPU_MS = 100;
+export const MAX_PISTON_CPU_MS = 10_000;
+export const PISTON_CONCURRENCY = 4;
+
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+// eslint-disable-next-line no-control-regex
+const stripAnsi = (text: string) => text.replace(/\u001b\[[0-9;]*[a-zA-Z]/g, "");
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
 }
 
 export class PistonExecutor implements CodeExecutor {
@@ -47,6 +61,7 @@ export class PistonExecutor implements CodeExecutor {
 
     const fileName = mapping.getFileName(request.sourceCode);
     const pistonLang = mapping.pistonLanguage;
+    const timeLimit = clamp(request.timeLimitMs, MIN_PISTON_CPU_MS, MAX_PISTON_CPU_MS);
 
     // Run the first test case first to check for compile errors on compiled languages
     const firstCase = request.cases[0]!;
@@ -55,29 +70,37 @@ export class PistonExecutor implements CodeExecutor {
       version: "*",
       files: [{ name: fileName, content: request.sourceCode }],
       stdin: firstCase.input,
-      run_timeout: request.timeLimitMs,
+      run_timeout: timeLimit,
       compile_timeout: 10_000,
     });
 
     if (firstResult.compile && firstResult.compile.code !== 0) {
-      const text = firstResult.compile.output || firstResult.compile.stderr || "Compilation failed";
-      return { compileOutput: truncate(text, MAX_COMPILE_CHARS), results: [] };
+      const rawText =
+        firstResult.compile.output || firstResult.compile.stderr || "Compilation failed";
+      const cleanText = stripAnsi(rawText);
+      return { compileOutput: truncate(cleanText, MAX_COMPILE_CHARS), results: [] };
     }
 
-    // If first case compiled, execute remaining test cases concurrently
+    // Execute remaining test cases in controlled batches to avoid overwhelming the sandbox container
     const remainingCases = request.cases.slice(1);
-    const remainingResults = await Promise.all(
-      remainingCases.map((c) =>
-        this.client.execute({
-          language: pistonLang,
-          version: "*",
-          files: [{ name: fileName, content: request.sourceCode }],
-          stdin: c.input,
-          run_timeout: request.timeLimitMs,
-          compile_timeout: 10_000,
-        }),
-      ),
-    );
+    const remainingResults: PistonExecuteResult[] = [];
+    const batches = chunk(remainingCases, PISTON_CONCURRENCY);
+
+    for (const batch of batches) {
+      const batchResults = await Promise.all(
+        batch.map((c) =>
+          this.client.execute({
+            language: pistonLang,
+            version: "*",
+            files: [{ name: fileName, content: request.sourceCode }],
+            stdin: c.input,
+            run_timeout: timeLimit,
+            compile_timeout: 10_000,
+          }),
+        ),
+      );
+      remainingResults.push(...batchResults);
+    }
 
     const allResults = [firstResult, ...remainingResults];
 
@@ -86,8 +109,8 @@ export class PistonExecutor implements CodeExecutor {
       results: allResults.map((r, i): CaseOutcome => {
         const testCase = request.cases[i]!;
         const run = r.run;
-        const stdout = truncate(run.stdout ?? "", MAX_CAPTURE_CHARS);
-        const stderr = run.stderr ? truncate(run.stderr, MAX_CAPTURE_CHARS) : null;
+        const stdout = truncate(stripAnsi(run.stdout ?? ""), MAX_CAPTURE_CHARS);
+        const stderr = run.stderr ? truncate(stripAnsi(run.stderr), MAX_CAPTURE_CHARS) : null;
 
         const isTimeout =
           run.signal === "SIGKILL" ||

@@ -70,6 +70,14 @@ const checkedSchema = envSchema
   )
   .refine(
     (env) =>
+      !(env.AI_PROVIDER === "groq" && (!env.GROQ_API_KEY || env.GROQ_API_KEY.trim().length === 0)),
+    {
+      message: "GROQ_API_KEY is required when AI_PROVIDER=groq",
+      path: ["GROQ_API_KEY"],
+    },
+  )
+  .refine(
+    (env) =>
       !env.PISTON_API_URL ||
       new URL(env.PISTON_API_URL).protocol === "https:" ||
       isLocalHost(new URL(env.PISTON_API_URL)),

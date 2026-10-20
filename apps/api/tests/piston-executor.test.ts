@@ -243,4 +243,62 @@ describe("PistonExecutor", () => {
       memoryLimitKb: 64_000,
     });
   });
+
+  it("clamps timeLimitMs to safe minimum and maximum limits", async () => {
+    const executedTimeLimits: (number | undefined)[] = [];
+    const client = new MockPistonClient((input) => {
+      executedTimeLimits.push(input.run_timeout);
+      return {
+        language: "python",
+        version: "3.10.0",
+        run: { stdout: "ok\n", stderr: "", output: "ok\n", code: 0, signal: null },
+      };
+    });
+    const executor = new PistonExecutor(client);
+
+    // Test too low (< 100ms)
+    await executor.execute({
+      language: "PYTHON",
+      sourceCode: "print('ok')",
+      cases: [{ testCaseId: "1", input: "", expectedOutput: "ok" }],
+      timeLimitMs: 20,
+      memoryLimitKb: 64_000,
+    });
+    expect(executedTimeLimits[0]).toBe(100);
+
+    // Test too high (> 10000ms)
+    await executor.execute({
+      language: "PYTHON",
+      sourceCode: "print('ok')",
+      cases: [{ testCaseId: "2", input: "", expectedOutput: "ok" }],
+      timeLimitMs: 99_999,
+      memoryLimitKb: 64_000,
+    });
+    expect(executedTimeLimits[1]).toBe(10_000);
+  });
+
+  it("strips ANSI terminal escape codes from compile and runtime outputs", async () => {
+    const client = new MockPistonClient(() => ({
+      language: "cpp",
+      version: "10.2.0",
+      compile: {
+        stdout: "",
+        stderr: "\u001b[31merror:\u001b[0m undefined identifier",
+        output: "\u001b[31merror:\u001b[0m undefined identifier",
+        code: 1,
+        signal: null,
+      },
+      run: { stdout: "", stderr: "", output: "", code: null, signal: null },
+    }));
+    const executor = new PistonExecutor(client);
+    const outcome = await executor.execute({
+      language: "CPP",
+      sourceCode: "int main() {}",
+      cases: [{ testCaseId: "1", input: "", expectedOutput: "" }],
+      timeLimitMs: 2000,
+      memoryLimitKb: 64_000,
+    });
+    expect(outcome.compileOutput).toBe("error: undefined identifier");
+    expect(outcome.compileOutput).not.toContain("\u001b[");
+  });
 });

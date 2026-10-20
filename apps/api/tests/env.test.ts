@@ -123,4 +123,11 @@ describe("loadEnv: code execution (Piston)", () => {
       loadEnv({ ...base, PISTON_API_URL: "http://localhost:2000/api/v2" }).PISTON_API_URL,
     ).toBe("http://localhost:2000/api/v2");
   });
+
+  it("requires GROQ_API_KEY when AI_PROVIDER is groq", () => {
+    expect(() => loadEnv({ ...base, AI_PROVIDER: "groq" })).toThrow(/GROQ_API_KEY/);
+    expect(
+      loadEnv({ ...base, AI_PROVIDER: "groq", GROQ_API_KEY: "gsk_test123" }).GROQ_API_KEY,
+    ).toBe("gsk_test123");
+  });
 });
