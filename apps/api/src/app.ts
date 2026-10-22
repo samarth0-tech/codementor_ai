@@ -33,6 +33,8 @@ import { NotificationsService } from "./modules/notifications/notifications.serv
 import { createHealthRouter } from "./modules/health/health.routes.js";
 import { createCatalogRouter, createProblemsRouter } from "./modules/problems/problems.routes.js";
 import { ProblemService } from "./modules/problems/problems.service.js";
+import { createAdminRouter } from "./modules/admin/admin.routes.js";
+import { AdminService } from "./modules/admin/admin.service.js";
 
 export interface AppDeps {
   env: Env;
@@ -143,6 +145,9 @@ export function createApp(deps: AppDeps): Express {
     "/notifications",
     createNotificationsRouter({ service: notificationsService, authenticate }),
   );
+
+  // Admin panel: user management & platform stats (Phase 17).
+  v1.use("/admin", createAdminRouter({ service: new AdminService(prisma), authenticate }));
 
   const problems = new ProblemService(
     prisma,

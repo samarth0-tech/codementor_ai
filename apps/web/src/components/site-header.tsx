@@ -26,6 +26,11 @@ export async function SiteHeader() {
               <ButtonLink href="/interviews" variant="ghost">
                 Interviews
               </ButtonLink>
+              {user.role === "ADMIN" && (
+                <ButtonLink href="/admin" variant="ghost">
+                  Admin
+                </ButtonLink>
+              )}
               <NotificationBell />
               <span className="hidden text-sm text-slate-600 sm:inline dark:text-slate-300">
                 {user.name}

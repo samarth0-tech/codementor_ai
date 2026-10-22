@@ -127,11 +127,12 @@ Without `TEST_DATABASE_URL`, database tests are skipped and the pure unit tests 
 
 ## Roadmap
 
-Built so far (phases 1-9): scaffold, API foundation, identity-note authentication, content schema
+Built so far (phases 1-17): scaffold, API foundation, identity-note authentication, content schema
 with 10 seeded problems, problem browser and dashboard, AI interviews with adaptive follow-ups and
-deterministic scoring, interview reports, the Monaco coding workspace, and real code execution on
-Judge0. Next: AI code review (phase 10), resume interviews, analytics, admin, security hardening,
-deployment.
+deterministic scoring, the Monaco coding workspace, real sandboxed code execution, AI code review
+(phase 10), resume upload & resume-based interviews (phase 11), dashboard analytics (phase 12),
+learning paths (phase 13), interview reports & improvement plans (phase 14), notifications & reminders
+(phase 15), security & reliability hardening (phase 16), and admin panel & user governance (phase 17).
 
 ## Known notes
 

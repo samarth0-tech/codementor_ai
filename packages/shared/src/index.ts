@@ -10,3 +10,4 @@ export * from "./dashboard.js";
 export * from "./paths.js";
 export * from "./improvement-plan.js";
 export * from "./notifications.js";
+export * from "./admin.js";
