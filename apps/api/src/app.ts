@@ -35,6 +35,8 @@ import { createCatalogRouter, createProblemsRouter } from "./modules/problems/pr
 import { ProblemService } from "./modules/problems/problems.service.js";
 import { createAdminRouter } from "./modules/admin/admin.routes.js";
 import { AdminService } from "./modules/admin/admin.service.js";
+import { createAdminProblemsRouter } from "./modules/admin/admin-problems.routes.js";
+import { AdminProblemService } from "./modules/admin/admin-problems.service.js";
 
 export interface AppDeps {
   env: Env;
@@ -148,6 +150,11 @@ export function createApp(deps: AppDeps): Express {
 
   // Admin panel: user management & platform stats (Phase 17).
   v1.use("/admin", createAdminRouter({ service: new AdminService(prisma), authenticate }));
+  // Admin problem & content authoring (Phase 18).
+  v1.use(
+    "/admin/problems",
+    createAdminProblemsRouter({ service: new AdminProblemService(prisma), authenticate }),
+  );
 
   const problems = new ProblemService(
     prisma,

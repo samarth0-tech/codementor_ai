@@ -11,3 +11,4 @@ export * from "./paths.js";
 export * from "./improvement-plan.js";
 export * from "./notifications.js";
 export * from "./admin.js";
+export * from "./admin-problems.js";

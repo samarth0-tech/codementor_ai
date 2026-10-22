@@ -28,8 +28,11 @@ export default async function AdminOverviewPage() {
             Real-time platform metrics, user access management, and AI usage insights.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <ButtonLink href="/admin/users" variant="primary" className="text-xs sm:text-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          <ButtonLink href="/admin/problems" variant="primary" className="text-xs sm:text-sm">
+            Manage Problems
+          </ButtonLink>
+          <ButtonLink href="/admin/users" variant="secondary" className="text-xs sm:text-sm">
             Manage Users
           </ButtonLink>
           <ButtonLink href="/dashboard" variant="secondary" className="text-xs sm:text-sm">
