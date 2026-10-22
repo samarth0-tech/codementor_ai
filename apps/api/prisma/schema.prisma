@@ -140,6 +140,7 @@ model TestCase {
   results SubmissionResult[]
 
   @@index([problemId, orderIndex])
+  @@index([problemId, isSample])
 }
 
 model LanguageConfig {
@@ -347,6 +348,8 @@ model Submission {
 
   @@index([userId, problemId, createdAt])
   @@index([status])
+  @@index([userId, status])
+  @@index([userId, mode, verdict])
 }
 
 model SubmissionResult {
