@@ -1,0 +1,54 @@
+# ── Multi-Stage Production Dockerfile for CodeMentor AI API ──────────────
+FROM node:22-alpine AS base
+WORKDIR /app
+RUN apk add --no-cache libc6-compat openssl
+
+# ── Dependencies Stage ───────────────────────────────────────────────────
+FROM base AS deps
+WORKDIR /app
+
+# Copy root and workspace manifests
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
+
+RUN npm ci
+
+# ── Build Stage ──────────────────────────────────────────────────────────
+FROM base AS builder
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Build shared package and API
+RUN npm run build:shared
+RUN npm run build -w @codementor/api
+
+# ── Production Runner Stage ──────────────────────────────────────────────
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=4000
+
+# Security: non-root user
+USER node
+
+# Copy build artifacts and dependencies
+COPY --chown=node:node --from=builder /app/package.json ./
+COPY --chown=node:node --from=builder /app/node_modules ./node_modules
+COPY --chown=node:node --from=builder /app/packages/shared ./packages/shared
+COPY --chown=node:node --from=builder /app/apps/api/package.json ./apps/api/
+COPY --chown=node:node --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --chown=node:node --from=builder /app/apps/api/prisma ./apps/api/prisma
+COPY --chown=node:node --from=builder /app/apps/api/src/generated ./apps/api/src/generated
+
+EXPOSE 4000
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:4000/health || exit 1
+
+WORKDIR /app/apps/api
+CMD ["node", "dist/server.js"]
